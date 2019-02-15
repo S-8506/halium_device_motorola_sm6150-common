@@ -105,6 +105,13 @@ TARGET_FS_CONFIG_GEN += \
     $(PLATFORM_PATH)/config.fs \
     $(PLATFORM_PATH)/mot_aids.fs
 
+ODM_MANIFEST_SKUS += \
+	365 \
+	366
+
+ODM_MANIFEST_365_FILES := $(PLATFORM_PATH)/manifest_sdmmagpie.xml
+ODM_MANIFEST_366_FILES := $(PLATFORM_PATH)/manifest_sdmmagpie.xml
+
 # Init
 TARGET_INIT_VENDOR_LIB := //$(PLATFORM_PATH):libinit_sm6150
 TARGET_RECOVERY_DEVICE_MODULES := libinit_sm6150
