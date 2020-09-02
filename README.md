@@ -1,8 +1,8 @@
-Copyright 2018 - The LineageOS Project
+Copyright 2020 - The LineageOS Project
 
-Device configuration for Motorola SDM660 Devices
+Device configuration for Motorola SM6150 Devices
 ======================================
 
 Supported devices :
 
-Payton, Evert, Chef, Beckham, Lake
+Def, Foles, Liber, Parker

@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2017 The LineageOS Project
+# Copyright (C) 2017, 2020 The LineageOS Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,9 +22,7 @@
 # definition file).
 #
 
-PLATFORM_PATH := device/motorola/sdm660-common
-
-TARGET_SPECIFIC_HEADER_PATH := $(PLATFORM_PATH)/include
+PLATFORM_PATH := device/motorola/sm6150-common
 
 BOARD_VENDOR := motorola
 
@@ -34,25 +32,18 @@ TARGET_ARCH_VARIANT := armv8-a
 TARGET_CPU_ABI := arm64-v8a
 TARGET_CPU_ABI2 :=
 TARGET_CPU_VARIANT := generic
-TARGET_CPU_VARIANT_RUNTIME := kryo
-TARGET_CPU_SMP := true
+TARGET_CPU_VARIANT_RUNTIME := cortex-a76
 
 TARGET_2ND_ARCH := arm
-TARGET_2ND_ARCH_VARIANT := armv8-a
+TARGET_2ND_ARCH_VARIANT := armv7-a-neon
 TARGET_2ND_CPU_ABI := armeabi-v7a
 TARGET_2ND_CPU_ABI2 := armeabi
-TARGET_2ND_CPU_VARIANT := generic
-TARGET_2ND_CPU_VARIANT_RUNTIME := cortex-a73
-ARCH_ARM_HAVE_TLS_REGISTER := true
+TARGET_2ND_CPU_VARIANT := cortex-a9
 
 BOARD_USES_QCOM_HARDWARE := true
-TARGET_BOOTLOADER_BOARD_NAME := SDM660
-TARGET_BOARD_PLATFORM := sdm660
-TARGET_BOARD_PLATFORM_GPU := qcom-adreno508
-TARGET_HAS_NO_SELECT_BUTTON := true
+TARGET_BOOTLOADER_BOARD_NAME := sm6150
+TARGET_BOARD_PLATFORM := sm6150
 
-ENABLE_CPUSETS := true
-ENABLE_SCHEDBOOST := true
 TARGET_USES_64_BIT_BINDER := true
 
 BUILD_BROKEN_DUP_RULES := true
@@ -82,7 +73,6 @@ TARGET_USES_QTI_CAMERA_DEVICE := true
 
 # Charger
 BOARD_CHARGER_ENABLE_SUSPEND := true
-WITH_LINEAGE_CHARGER := false
 
 # Display
 MAX_EGL_CACHE_KEY_SIZE := 12*1024
@@ -105,18 +95,10 @@ ifeq ($(HOST_OS),linux)
 endif
 
 # GPS
-TARGET_NO_RPC := true
 USE_DEVICE_SPECIFIC_GPS := true
-BOARD_VENDOR_QCOM_GPS_LOC_API_HARDWARE := $(TARGET_BOARD_PLATFORM)
-LOC_HIDL_VERSION := 3.0
 
 # HIDL
 DEVICE_MANIFEST_FILE := $(PLATFORM_PATH)/manifest.xml
-ifdef BOARD_USES_KEYMASTER_4
-    DEVICE_MANIFEST_FILE += $(PLATFORM_PATH)/keymaster_4.xml
-else
-    DEVICE_MANIFEST_FILE += $(PLATFORM_PATH)/keymaster_3.xml
-endif
 DEVICE_MATRIX_FILE := $(PLATFORM_PATH)/compatibility_matrix.xml
 DEVICE_FRAMEWORK_MANIFEST_FILE := $(PLATFORM_PATH)/framework_manifest.xml
 TARGET_FS_CONFIG_GEN += \
@@ -124,17 +106,11 @@ TARGET_FS_CONFIG_GEN += \
     $(PLATFORM_PATH)/mot_aids.fs
 
 # Init
-TARGET_INIT_VENDOR_LIB := //$(PLATFORM_PATH):libinit_sdm660
-TARGET_RECOVERY_DEVICE_MODULES := libinit_sdm660
+TARGET_INIT_VENDOR_LIB := //$(PLATFORM_PATH):libinit_sm6150
+TARGET_RECOVERY_DEVICE_MODULES := libinit_sm6150
 
 # Kernel
-BOARD_KERNEL_CMDLINE := androidboot.hardware=qcom user_debug=31 ehci-hcd.park=3
-BOARD_KERNEL_CMDLINE += lpm_levels.sleep_disabled=1 service_locator.enable=1
-BOARD_KERNEL_CMDLINE += swiotlb=2048 androidboot.configfs=true
-BOARD_KERNEL_CMDLINE += sched_enable_hmp=1 sched_enable_power_aware=1
-BOARD_KERNEL_CMDLINE += androidboot.usbcontroller=a800000.dwc3
-BOARD_KERNEL_CMDLINE += loop.max_part=7
-BOARD_KERNEL_CMDLINE += androidboot.veritymode=eio
+BOARD_KERNEL_CMDLINE := console=ttyMSM0,115200n8 earlycon=msm_geni_serial,0x880000 androidboot.hardware=qcom androidboot.console=ttyMSM0 lpm_levels.sleep_disabled=1 androidboot.usbcontroller=a600000.dwc3 loop.max_part=7 cgroup.memory=nokmem,nosocket service_locator.enable=1
 #BOARD_KERNEL_CMDLINE += androidboot.selinux=permissive
 BOARD_KERNEL_BASE := 0x00000000
 BOARD_KERNEL_PAGESIZE := 4096
@@ -143,7 +119,7 @@ BOARD_RAMDISK_OFFSET := 0x01000000
 BOARD_KERNEL_IMAGE_NAME := Image.gz-dtb
 TARGET_KERNEL_ARCH := arm64
 TARGET_KERNEL_CLANG_COMPILE := true
-TARGET_KERNEL_SOURCE := kernel/motorola/msm8998
+TARGET_KERNEL_SOURCE := kernel/motorola/sm6150
 
 # Lights
 TARGET_PROVIDES_LIBLIGHT := true
@@ -161,15 +137,10 @@ TARGET_USERIMAGES_USE_F2FS := true
 TARGET_USES_MKE2FS := true
 TARGET_COPY_OUT_VENDOR := vendor
 
-# Power
-TARGET_USES_INTERACTION_BOOST := true
-
 # RIL
+ENABLE_VENDOR_RIL_SERVICE := true
 TARGET_PROVIDES_QTI_TELEPHONY_JAR := true
-TARGET_USES_OLD_MNC_FORMAT := true
-CUSTOM_APNS_FILE := $(PLATFORM_PATH)/configs/sprint_apns.xml
-ODM_MANIFEST_SKUS += qcril
-ODM_MANIFEST_QCRIL_FILES := $(PLATFORM_PATH)/odm_manifest_qcril.xml
+TARGET_USES_PRE_UPLINK_FEATURES_NETMGRD := true
 
 # Root
 BOARD_ROOT_EXTRA_SYMLINKS := \
@@ -179,12 +150,11 @@ BOARD_ROOT_EXTRA_SYMLINKS := \
 VENDOR_SECURITY_PATCH := 2019-11-01
 
 # SELinux
-include device/qcom/sepolicy-legacy-um/sepolicy.mk
-BOARD_SEPOLICY_DIRS += $(PLATFORM_PATH)/sepolicy/vendor
+TARGET_SEPOLICY_DIR := msmsteppe
+include device/qcom/sepolicy/sepolicy.mk
 BOARD_PLAT_PRIVATE_SEPOLICY_DIR += $(PLATFORM_PATH)/sepolicy/private
-
-# Timeservice
-BOARD_USES_QC_TIME_SERVICES := true
+BOARD_PLAT_PUBLIC_SEPOLICY_DIR += $(PLATFORM_PATH)/sepolicy/public
+BOARD_SEPOLICY_DIRS += $(PLATFORM_PATH)/sepolicy/vendor
 
 # Treble
 BOARD_PROPERTY_OVERRIDES_SPLIT_ENABLED := true
@@ -192,20 +162,19 @@ BOARD_VNDK_VERSION := current
 PRODUCT_FULL_TREBLE_OVERRIDE := true
 
 # Verified Boot
-BOARD_AVB_ENABLE := false
-BOARD_BUILD_DISABLED_VBMETAIMAGE := true
+BOARD_AVB_ENABLE := true
+BOARD_AVB_MAKE_VBMETA_IMAGE_ARGS += --flags 2
 
 # Wifi
-BOARD_HAS_QCOM_WLAN := true
-BOARD_HAS_QCOM_WLAN_SDK := true
-BOARD_WLAN_DEVICE := qcwcn
-WPA_SUPPLICANT_VERSION := VER_0_8_X
-BOARD_WPA_SUPPLICANT_DRIVER := NL80211
-BOARD_WPA_SUPPLICANT_PRIVATE_LIB := lib_driver_cmd_$(BOARD_WLAN_DEVICE)
 BOARD_HOSTAPD_DRIVER := NL80211
-BOARD_HOSTAPD_PRIVATE_LIB := lib_driver_cmd_$(BOARD_WLAN_DEVICE)
-WIFI_DRIVER_FW_PATH_STA := "sta"
-WIFI_DRIVER_FW_PATH_AP  := "ap"
-WIFI_DRIVER_FW_PATH_P2P := "p2p"
-WIFI_DRIVER_OPERSTATE_PATH := "/sys/class/net/wlan0/operstate"
-PRODUCT_VENDOR_MOVE_ENABLED := true
+BOARD_HOSTAPD_PRIVATE_LIB := lib_driver_cmd_qcwcn
+BOARD_WLAN_DEVICE := qcwcn
+BOARD_WPA_SUPPLICANT_DRIVER := NL80211
+BOARD_WPA_SUPPLICANT_PRIVATE_LIB := lib_driver_cmd_qcwcn
+WIFI_DRIVER_DEFAULT := qca_cld3
+WIFI_DRIVER_STATE_CTRL_PARAM := "/dev/wlan"
+WIFI_DRIVER_STATE_OFF := "OFF"
+WIFI_DRIVER_STATE_ON := "ON"
+WIFI_HIDL_FEATURE_AWARE := true
+WIFI_HIDL_FEATURE_DUAL_INTERFACE := true
+WPA_SUPPLICANT_VERSION := VER_0_8_X

@@ -1,6 +1,7 @@
+
 #!/bin/bash
 #
-# Copyright (C) 2018-2019 The LineageOS Project
+# Copyright (C) 2018-2020 The LineageOS Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -58,22 +59,6 @@ done
 if [ -z "${SRC}" ]; then
     SRC="adb"
 fi
-
-function blob_fixup() {
-    case "${1}" in
-
-    # Load wrapped shim
-    vendor/lib64/libmdmcutback.so)
-        sed -i "s|libqsap_sdk.so|libqsapshim.so|g" "$MDMCUTBACK" "${2}"
-        ;;
-
-    # Fix xml version
-    product/etc/permissions/vendor.qti.hardware.data.connection-V1.0-java.xml | product/etc/permissions/vendor.qti.hardware.data.connection-V1.1-java.xml)
-        sed -i 's/xml version="2.0"/xml version="1.0"/' "${2}"
-        ;;
-
-    esac
-}
 
 # Initialize the helper for common device
 setup_vendor "${DEVICE_COMMON}" "${VENDOR}" "${LINEAGE_ROOT}" true "${CLEAN_VENDOR}"

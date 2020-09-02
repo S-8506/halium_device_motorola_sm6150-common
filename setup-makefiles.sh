@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2018-2019 The LineageOS Project
+# Copyright (C) 2018-2020 The LineageOS Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 
 set -e
 
-INITIAL_COPYRIGHT_YEAR=2018
+INITIAL_COPYRIGHT_YEAR=2020
 
 # Load extract_utils and do some sanity checks
 MY_DIR="${BASH_SOURCE%/*}"
@@ -36,7 +36,7 @@ source "${HELPER}"
 setup_vendor "${DEVICE_COMMON}" "${VENDOR}" "${LINEAGE_ROOT}" true
 
 # Copyright headers and guards
-write_headers "payton evert chef beckham lake"
+write_headers "def foles liber parker"
 
 # The standard common blobs
 write_makefiles "${MY_DIR}/proprietary-files.txt" true

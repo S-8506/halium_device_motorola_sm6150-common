@@ -5,7 +5,7 @@
  *  for attribution purposes only.
  *
  * Copyright (C) 2012 The Android Open Source Project
- * Copyright (C) 2017 The LineageOS Project
+ * Copyright (C) 2017, 2020 The LineageOS Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,21 +33,17 @@ static inline const char* BtmGetDefaultName()
     char product_device[PROPERTY_VALUE_MAX];
     property_get("ro.product.device", product_device, "");
 
-    if (strstr(product_device, "beckham"))
-        return "Moto Z3 Play";
-    if (strstr(product_device, "chef"))
-        return "Moto One Power";
-    if (strstr(product_device, "evert"))
-        return "Moto G6 Plus";
-    if (strstr(product_device, "lake"))
-        return "Moto G7 Plus";
-    if (strstr(product_device, "lake_n"))
-        return "REVVLRY+";
-    if (strstr(product_device, "payton"))
-        return "Moto X4";
+    if (strstr(product_device, "def"))
+        return "Moto One Hyper";
+    if (strstr(product_device, "foles"))
+        return "Moto Z4";
+    if (strstr(product_device, "liber"))
+        return "Moto One Fusion+";
+    if (strstr(product_device, "parker"))
+        return "Moto One Zoom";
 
     // Fallback to Moto SDM Generic
-    return "Moto SDM6xx";
+    return "Moto SM6xxx";
 }
 
 #define BTM_DEF_LOCAL_NAME BtmGetDefaultName()
