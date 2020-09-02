@@ -47,6 +47,7 @@
 #include <limits.h>
 #include <dirent.h>
 #include <linux/kernel.h>
+#include <asm/byteorder.h>
 #include <map>
 #include <vector>
 #include <string>
@@ -57,7 +58,7 @@
 
 
 #define LOG_TAG "gpt-utils"
-#include <log/log.h>
+#include <cutils/log.h>
 #include <cutils/properties.h>
 #include "gpt-utils.h"
 #include <zlib.h>
@@ -768,6 +769,7 @@ int prepare_partitions(enum boot_update_stage stage, const char *dev_path)
     enum gpt_state gpt_prim, gpt_second;
     enum boot_update_stage internal_stage;
     struct stat xbl_partition_stat;
+    struct stat ufs_dir_stat;
 
     if (!dev_path) {
         fprintf(stderr, "%s: Invalid dev_path\n",
@@ -990,6 +992,7 @@ int add_lun_to_update_list(char *lun_path, struct update_data *dat)
 
 int prepare_boot_update(enum boot_update_stage stage)
 {
+        int r, fd;
         int is_ufs = gpt_utils_is_ufs_device();
         struct stat ufs_dir_stat;
         struct update_data data;
