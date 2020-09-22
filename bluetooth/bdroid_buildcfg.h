@@ -39,6 +39,8 @@ static inline const char* BtmGetDefaultName()
         return "Moto Z4";
     if (strstr(product_device, "liber"))
         return "Moto One Fusion+";
+    if (strstr(product_device, "odessa"))
+        return "Moto G9+";
     if (strstr(product_device, "parker"))
         return "Moto One Zoom";
 

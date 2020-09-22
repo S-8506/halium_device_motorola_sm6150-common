@@ -5,4 +5,4 @@ Device configuration for Motorola SM6150 Devices
 
 Supported devices :
 
-Def, Foles, Liber, Parker
+Def, Foles, Liber, Odessa, Parker
