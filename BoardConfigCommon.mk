@@ -95,6 +95,8 @@ ifeq ($(HOST_OS),linux)
 endif
 
 # GPS
+BOARD_VENDOR_QCOM_GPS_LOC_API_HARDWARE := default
+GNSS_HIDL_VERSION := 2.0
 USE_DEVICE_SPECIFIC_GPS := true
 
 # HIDL
