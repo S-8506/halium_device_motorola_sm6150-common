@@ -29,49 +29,56 @@ namespace V2_0 {
 namespace implementation {
 
 #define LEDS            "/sys/class/leds/"
+#define LCD_LED         "/sys/class/backlight/panel0-backlight/"
 
-#define LCD_LED         LEDS "lcd-backlight/"
+#define BLUE_LED        LEDS "blue_moto/"
 #define CHARGING_LED    LEDS "charging/"
+#define GREEN_LED       LEDS "green_moto/"
+#define RED_LED         LEDS "red_moto/"
 
+#define BREATH          "breath"
+#define BREATH_PATTERN  "breath_pattern"
 #define BRIGHTNESS      "brightness"
-#define DUTY_PCTS       "duty_pcts"
-#define START_IDX       "start_idx"
-#define PAUSE_LO        "pause_lo"
-#define PAUSE_HI        "pause_hi"
-#define RAMP_STEP_MS    "ramp_step_ms"
-#define BLINK           "blink"
-
-/*
- * 8 duty percent steps.
- */
-#define RAMP_STEPS 8
-/*
- * Each step will stay on for 50ms by default.
- */
-#define RAMP_STEP_DURATION 50
-/*
- * Each value represents a duty percent (0 - 100) for the led pwm.
- */
-static int32_t BRIGHTNESS_RAMP[RAMP_STEPS] = {0, 12, 25, 37, 50, 72, 85, 100};
+#define MAX_BRIGHTNESS  "max_brightness"
 
 /*
  * Write value to path and close file.
  */
-static void set(std::string path, std::string value) {
+template <typename T>
+static void set(const std::string& path, const T& value) {
     std::ofstream file(path);
-
-    if (!file.is_open()) {
-        ALOGE("failed to write %s to %s", value.c_str(), path.c_str());
-        return;
-    }
-
     file << value;
 }
 
-static void set(std::string path, int value) {
-    set(path, std::to_string(value));
+/*
+ * Read from path and close file.
+ * Return def in case of any failure.
+ */
+template <typename T>
+static T get(const std::string& path, const T& def) {
+    std::ifstream file(path);
+    T result;
+
+    file >> result;
+    return file.fail() ? def : result;
 }
-    
+
+/*
+ * Get breath value as color + pauseHi + pauseLo
+ * rise_time hold_time fall_time off_time
+ */
+static std::string getBreathPatternValue(uint32_t pauseHi,
+    uint32_t pauseLo) {
+
+    char buffer[40];
+    snprintf(buffer, sizeof(buffer), "%d %d %d %d\n",
+        pauseLo, pauseHi, pauseLo, pauseHi);
+    std::string ret = buffer;
+    return ret;
+}
+
+static constexpr int kDefaultMaxBrightness = 255;
+
 static uint32_t rgbToBrightness(const LightState& state) {
     uint32_t color = state.color & 0x00ffffff;
     return ((77 * ((color >> 16) & 0xff)) + (150 * ((color >> 8) & 0xff)) +
@@ -79,76 +86,100 @@ static uint32_t rgbToBrightness(const LightState& state) {
 }
 
 static void handleBacklight(const LightState& state) {
-    uint32_t brightness = rgbToBrightness(state);
-    set(LCD_LED BRIGHTNESS, brightness);
+    int maxBrightness = get(LCD_LED MAX_BRIGHTNESS, -1);
+    if (maxBrightness < 0) {
+        maxBrightness = kDefaultMaxBrightness;
+    }
+    int sentBrightness = rgbToBrightness(state);
+    int brightness = sentBrightness * maxBrightness / kDefaultMaxBrightness;
+    LOG(DEBUG) << "Writing backlight brightness " << brightness
+               << " (orig " << sentBrightness << ")";
+    set(LCD_LED BRIGHTNESS);
 }
 
-/*
- * Scale each value of the brightness ramp according to the
- * brightness of the color.
- */
-static std::string getScaledRamp(uint32_t brightness) {
-    std::string ramp, pad;
+static void handleBattery(const LightState& state) {
+    int brightness = Light::rgbToBrightness(state);
 
-    for (auto const& step : BRIGHTNESS_RAMP) {
-        int32_t scaledStep = (step * brightness) / 0xFF;
-        ramp += pad + std::to_string(scaledStep);
-        pad = ",";
-    }
+    set(RED_LED BREATH, brightness == 0 ? 0 : 1);
+    set(RED_LED BRIGHTNESS, brightness);
 
-    return ramp;
+    set(GREEN_LED BREATH, brightness == 0 ? 0 : 1);
+    set(GREEN_LED BRIGHTNESS, brightness);
+
+    set(BLUE_LED BREATH, brightness == 0 ? 0 : 1);
+    set(BLUE_LED BRIGHTNESS, brightness);
 }
 
 static void handleNotification(const LightState& state) {
-    uint32_t alpha, brightness;
+    uint32_t redBrightness, greenBrightness, blueBrightness, brightness;
 
     /*
      * Extract brightness from AARRGGBB.
      */
-    alpha = (state.color >> 24) & 0xFF;
-    brightness = rgbToBrightness(state);
+    redBrightness = (state.color >> 16) & 0xFF;
+    greenBrightness = (state.color >> 8) & 0xFF;
+    blueBrightness = state.color & 0xFF;
+
+    brightness = (state.color >> 24) & 0xFF;
 
     /*
-     * Scale brightness if the Alpha brightness is not 0xFF.
+     * Scale RGB brightness if the Alpha brightness is not 0xFF.
      */
-    if (alpha != 0xFF)
-        brightness = (brightness * alpha) / 0xFF;
-    
-    /* Disable blinking. */
-    set(CHARGING_LED BLINK, 0);
+    if (brightness != 0xFF) {
+        redBrightness = (redBrightness * brightness) / 0xFF;
+        greenBrightness = (greenBrightness * brightness) / 0xFF;
+        blueBrightness = (blueBrightness * brightness) / 0xFF;
+    }
+
+    /* Disable breathing. */
+    set(RED_LED BREATH, 0);
+    set(RED_LED BRIGHTNESS, 0);
+    set(GREEN_LED BREATH, 0);
+    set(GREEN_LED BRIGHTNESS, 0);
+    set(BLUE_LED BREATH, 0);
+    set(BLUE_LED BRIGHTNESS, 0);
 
     if (state.flashMode == Flash::TIMED) {
-        /*
-         * If the flashOnMs duration is not long enough to fit ramping up
-         * and down at the default step duration, step duration is modified
-         * to fit.
-         */
-        int32_t stepDuration = RAMP_STEP_DURATION;
-        int32_t pauseHi = state.flashOnMs - (stepDuration * RAMP_STEPS * 2);
+        int32_t pauseHi = state.flashOnMs;
         int32_t pauseLo = state.flashOffMs;
+        int32_t breath = 0;
 
-        if (pauseHi < 0) {
-            stepDuration = state.flashOnMs / (RAMP_STEPS * 2);
-            pauseHi = 0;
+        if (pauseHi > 0 && pauseLo > 0) {
+            breath = 1;
         }
 
-        /* Set LED */
-        set(CHARGING_LED START_IDX, 0 * RAMP_STEPS);
-        set(CHARGING_LED DUTY_PCTS, getScaledRamp(brightness));
-        set(CHARGING_LED PAUSE_LO, pauseLo);
-        set(CHARGING_LED PAUSE_HI, pauseHi);
-        set(CHARGING_LED RAMP_STEP_MS, stepDuration);
+        /* Enable breathing if times are higher than 0. */
+        if (breath) {
+            if (redBrightness > 0 || greenBrightness > 0 || blueBrightness > 0) {
+                set(RED_LED BREATH_PATTERN, getBreathPatternValue(pauseHi, pauseLo));
+                set(RED_LED BREATH, 1);
+                set(RED_LED BRIGHTNESS, kDefaultMaxBrightness);
 
-        /* Enable blinking. */
-        set(CHARGING_LED BLINK, 1);
+                set(GREEN_LED BREATH_PATTERN, getBreathPatternValue(pauseHi, pauseLo));
+                set(GREEN_LED BREATH, 1);
+                set(GREEN_LED BRIGHTNESS, kDefaultMaxBrightness);
+
+                set(BLUE_LED BREATH_PATTERN, getBreathPatternValue(pauseHi, pauseLo));
+                set(BLUE_LED BREATH, 1);
+                set(BLUE_LED BRIGHTNESS, kDefaultMaxBrightness);
+            }
+        }
     } else {
-        set(CHARGING_LED BRIGHTNESS, brightness);
+        if (redBrightness > 0 || greenBrightness > 0 || blueBrightness > 0) {
+                set(RED_LED BRIGHTNESS, kDefaultMaxBrightness);
+                set(GREEN_LED BRIGHTNESS, kDefaultMaxBrightness);
+                set(BLUE_LED BRIGHTNESS, kDefaultMaxBrightness);
+        } else {
+                set(RED_LED BRIGHTNESS, 0);
+                set(GREEN_LED BRIGHTNESS, 0);
+                set(BLUE_LED BRIGHTNESS, 0);
+        }
     }
 }
 
 static std::map<Type, std::function<void(const LightState&)>> lights = {
     {Type::BACKLIGHT, handleBacklight},
-    {Type::BATTERY, handleNotification},
+    {Type::BATTERY, handleBattery},
     {Type::NOTIFICATIONS, handleNotification},
     {Type::ATTENTION, handleNotification},
 };

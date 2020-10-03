@@ -1,24 +1,34 @@
+on boot
+    # Backlight
+    chown system system /sys/class/backlight/panel0-backlight/brightness
+    chown system system /sys/class/backlight/panel0-backlight/max_brightness
+    chmod 0644 /sys/class/backlight/panel0-backlight/brightness
+    chmod 0644 /sys/class/backlight/panel0-backlight/max_brightness
+
+    # Notification light
+    chown system system /sys/class/leds/blue_moto/brightness
+    chown system system /sys/class/leds/blue_moto/breath
+    chown system system /sys/class/leds/blue_moto/breath_pattern
+    chmod 660 /sys/class/leds/blue_moto/breath
+    chmod 660 /sys/class/leds/blue_moto/breath_pattern
+
+    chown system system /sys/class/leds/green_moto/brightness
+    chown system system /sys/class/leds/green_moto/breath
+    chown system system /sys/class/leds/green_moto/breath_pattern
+    chmod 660 /sys/class/leds/green_moto/breath
+    chmod 660 /sys/class/leds/green_moto/breath_pattern
+
+    chown system system /sys/class/leds/red_moto/brightness
+    chown system system /sys/class/leds/red_moto/breath
+    chown system system /sys/class/leds/red_moto/breath_pattern
+    chmod 660 /sys/class/leds/red_moto/breath
+    chmod 660 /sys/class/leds/red_moto/breath_pattern
+
+    start vendor.light-hal-2-0
+
 service vendor.light-hal-2-0 /vendor/bin/hw/android.hardware.light@2.0-service.sm6150
     class hal
     user system
     group system
-
-on boot
-    # Change ownership and permission for leds backlight
-    chmod 0664 /sys/class/leds/lcd-backlight/brightness
-    chown system system /sys/class/leds/charging/brightness
-    chmod 0664 /sys/class/leds/charging/brightness
-    chown system system /sys/class/leds/charging/blink
-    chmod 660 /sys/class/leds/charging/blink
-    chown system system /sys/class/leds/charging/pause_lo
-    chmod 660 /sys/class/leds/charging/pause_lo
-    chown system system /sys/class/leds/charging/pause_hi
-    chmod 660 /sys/class/leds/charging/pause_hi
-    chown system system /sys/class/leds/charging/blink
-    chmod 660 /sys/class/leds/charging/blink
-    chown system system /sys/class/leds/charging/ramp_step_ms
-    chmod 660 /sys/class/leds/charging/ramp_step_ms
-    chown system system /sys/class/leds/charging/duty_pcts
-    chmod 660 /sys/class/leds/charging/duty_pcts
-    chown system system /sys/class/leds/charging/start_idx
-    chmod 660 /sys/class/leds/charging/start_idx
+    # shutting off lights while powering-off
+    shutdown critical
