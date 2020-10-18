@@ -130,7 +130,7 @@ PRODUCT_PROPERTY_OVERRIDES += \
 
 # Netflix
 PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
-    ro.netflix.bsp_rev=Q660-13149-1
+    ro.netflix.bsp_rev=Q6150-17263-1
 
 # OEM Unlock reporting
 PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
